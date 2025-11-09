@@ -543,6 +543,23 @@ class AccountManagerApp(ctk.CTk):
         )
         copy_username_btn.pack(side="left")
         
+        # 备注（可选）
+        note_label = ctk.CTkLabel(
+            center_frame,
+            text="备注（可选）",
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        note_label.pack(pady=(0, 5))
+        
+        self.note_textbox = ctk.CTkTextbox(
+            center_frame,
+            width=400,
+            height=80,
+            font=ctk.CTkFont(size=13),
+            border_width=2
+        )
+        self.note_textbox.pack(pady=(0, 30))
+        
         # 按钮区域
         btn_frame = ctk.CTkFrame(center_frame, fg_color="transparent")
         btn_frame.pack(pady=10)
@@ -933,6 +950,13 @@ class AccountManagerApp(ctk.CTk):
             self.show_message("请完成所有步骤！")
             return
         
+        # 获取备注信息（如果有）
+        note = self.note_textbox.get("1.0", "end-1c").strip()
+        if note:
+            self.current_registration['note'] = note
+        else:
+            self.current_registration.pop('note', None)
+        
         # 添加创建时间
         self.current_registration['created_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
@@ -1011,6 +1035,7 @@ class AccountManagerApp(ctk.CTk):
         self.password_entry.delete(0, 'end')
         self.verification_code_entry.delete(0, 'end')
         self.username_entry.delete(0, 'end')
+        self.note_textbox.delete("1.0", "end")
         
         # 重置验证码状态
         self.verification_status_label.configure(text="⏳ 正在自动接收验证码，请稍候...", text_color="#4a9eff")
@@ -1099,6 +1124,14 @@ class AccountManagerApp(ctk.CTk):
             "👤 用户名",
             account.get('username', 'N/A')
         )
+        
+        # 备注行（如果有备注）
+        if account.get('note'):
+            self.create_note_row(
+                content,
+                "📝 备注",
+                account.get('note', '')
+            )
     
     def create_field_row(self, parent, label_text, value):
         """创建字段行（带复制按钮）"""
@@ -1125,6 +1158,45 @@ class AccountManagerApp(ctk.CTk):
         value_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
         value_entry.insert(0, value)
         value_entry.configure(state="readonly")
+        
+        # 复制按钮
+        copy_btn = ctk.CTkButton(
+            row,
+            text="📋 复制",
+            width=80,
+            height=35,
+            font=ctk.CTkFont(size=12),
+            command=lambda v=value: self.copy_to_clipboard(v),
+            fg_color="#1f6aa5",
+            hover_color="#1e5a8e"
+        )
+        copy_btn.pack(side="left")
+        
+    def create_note_row(self, parent, label_text, value):
+        """创建备注字段行（带复制按钮）"""
+        row = ctk.CTkFrame(parent, fg_color="transparent")
+        row.pack(fill="x", pady=5)
+        
+        # 标签
+        label = ctk.CTkLabel(
+            row,
+            text=label_text,
+            font=ctk.CTkFont(size=13, weight="bold"),
+            width=100,
+            anchor="nw"
+        )
+        label.pack(side="left", padx=(0, 10))
+        
+        # 备注文本框（只读效果）
+        note_box = ctk.CTkTextbox(
+            row,
+            font=ctk.CTkFont(size=13),
+            height=60,
+            border_width=1
+        )
+        note_box.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        note_box.insert("1.0", value)
+        note_box.configure(state="disabled")
         
         # 复制按钮
         copy_btn = ctk.CTkButton(
